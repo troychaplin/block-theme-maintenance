@@ -1,3 +1,5 @@
+<img src="assets/banner-772x250.png" alt="Block Theme Maintenance Plugin Banner" style="width: 100%; height: auto;">
+
 # Block Theme Maintenance Mode
 
 Simple maintenance mode for block themes. Shows a maintenance template to logged-out visitors while allowing logged-in users to browse normally.

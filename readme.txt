@@ -1,9 +1,9 @@
-=== Block Theme Maintenance Mode ===
+=== Block Theme Maintenance ===
 
 Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
 Requires at least: 6.3
-Tested up to: 6.7
+Tested up to: 6.9
 Stable tag: 1.0.0
 Requires PHP: 7.0
 License: GPLv2 or later

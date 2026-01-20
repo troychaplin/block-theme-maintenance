@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       Block Theme Maintenance Mode
+ * Plugin Name:       Block Theme Maintenance
  * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.
  * Requires at least: 6.3
  * Requires PHP:      7.0
@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Main plugin class for Block Theme Maintenance Mode.
+ * Main plugin class for Block Theme Maintenance.
  */
-class Block_Theme_Maintenance_Mode {
+class Block_Theme_Maintenance {
 
 	/**
 	 * Constructor. Registers hooks for admin menu, settings, template, and admin bar.
@@ -173,4 +173,4 @@ class Block_Theme_Maintenance_Mode {
 	}
 }
 
-new Block_Theme_Maintenance_Mode();
+new Block_Theme_Maintenance();
