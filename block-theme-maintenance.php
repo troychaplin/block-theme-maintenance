@@ -278,7 +278,7 @@ class BTMM_Maintenance_Mode {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		$_wp_current_template_content = $maintenance_template->content;
 
-		return ABSPATH . WPINC . '/template-canvas.php';
+        return wp_normalize_path( ABSPATH . 'wp-includes/template-canvas.php' );
 	}
 
 	/**
