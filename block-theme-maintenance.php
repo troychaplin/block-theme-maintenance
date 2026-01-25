@@ -57,7 +57,7 @@ class BTMM_Maintenance_Mode {
 			'Maintenance Mode',
 			'Maintenance Mode',
 			'manage_options',
-			'block-theme-maintenance',
+			'btmm-maintenance',
 			array( $this, 'settings_page' )
 		);
 	}
@@ -67,7 +67,7 @@ class BTMM_Maintenance_Mode {
 	 */
 	public function register_settings() {
 		register_setting(
-			'block_theme_maintenance',
+			'btmm_settings',
 			'btmm_enabled',
 			array(
 				'type'              => 'boolean',
@@ -76,7 +76,7 @@ class BTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'block_theme_maintenance',
+			'btmm_settings',
 			'btmm_retry_after',
 			array(
 				'type'              => 'integer',
@@ -85,7 +85,7 @@ class BTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'block_theme_maintenance',
+			'btmm_settings',
 			'btmm_allow_bots',
 			array(
 				'type'              => 'boolean',
@@ -94,7 +94,7 @@ class BTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'block_theme_maintenance',
+			'btmm_settings',
 			'btmm_enabled_at',
 			array(
 				'type'              => 'integer',
@@ -139,7 +139,7 @@ class BTMM_Maintenance_Mode {
 			<?php endif; ?>
 
 			<form method="post" action="options.php">
-				<?php settings_fields( 'block_theme_maintenance' ); ?>
+				<?php settings_fields( 'btmm_settings' ); ?>
 				<table class="form-table">
 					<tr>
 						<th scope="row">Enable Maintenance Mode</th>
@@ -278,7 +278,7 @@ class BTMM_Maintenance_Mode {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		$_wp_current_template_content = $maintenance_template->content;
 
-        return wp_normalize_path( ABSPATH . 'wp-includes/template-canvas.php' );
+		return wp_normalize_path( ABSPATH . 'wp-includes/template-canvas.php' );
 	}
 
 	/**
@@ -295,7 +295,7 @@ class BTMM_Maintenance_Mode {
 			array(
 				'id'    => 'btmm-notice',
 				'title' => '🚧 Maintenance Mode Active',
-				'href'  => admin_url( 'options-general.php?page=block-theme-maintenance' ),
+				'href'  => admin_url( 'options-general.php?page=btmm-maintenance' ),
 			)
 		);
 	}
@@ -324,7 +324,7 @@ class BTMM_Maintenance_Mode {
 					<strong>Maintenance Mode Warning:</strong>
 					Your site has been in maintenance mode for <?php echo absint( $days_active ); ?> days.
 					<?php if ( ! $allow_bots ) : ?>
-						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=block-theme-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
+						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=btmm-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
 					<?php else : ?>
 						Extended maintenance periods can still affect your search rankings.
 					<?php endif; ?>
