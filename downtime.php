@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name:       Block Theme Maintenance
- * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.
+ * Plugin Name:       Downtime
+ * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html and style to match your brand.
  * Requires at least: 6.3
  * Requires PHP:      7.0
  * Version:           1.0.0
  * Author:            Troy Chaplin
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       block-theme-maintenance
+ * Text Domain:       downtime
  *
- * @package Block_Theme_Maintenance
+ * @package Downtime
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Main plugin class for Block Theme Maintenance.
+ * Main plugin class for Downtime: Block Theme Maintenance Mode.
  */
-class Block_Theme_Maintenance_Mode {
+class DTMM_Maintenance_Mode {
 
 	/**
 	 * List of search engine bot user agent strings to detect.
@@ -54,10 +54,10 @@ class Block_Theme_Maintenance_Mode {
 	 */
 	public function add_admin_menu() {
 		add_options_page(
-			'Maintenance Mode',
-			'Maintenance Mode',
+			'Downtime',
+			'Downtime',
 			'manage_options',
-			'block-theme-maintenance',
+			'dtmm-maintenance',
 			array( $this, 'settings_page' )
 		);
 	}
@@ -66,22 +66,48 @@ class Block_Theme_Maintenance_Mode {
 	 * Registers the plugin settings.
 	 */
 	public function register_settings() {
-		register_setting( 'block_theme_maintenance', 'btmm_enabled' );
+		// Handle reset tracking action.
+		if ( isset( $_POST['dtmm_reset_tracking'] ) && check_admin_referer( 'dtmm_reset_tracking_action' ) ) {
+			if ( get_option( 'dtmm_enabled', false ) ) {
+				update_option( 'dtmm_enabled_at', time() );
+			} else {
+				delete_option( 'dtmm_enabled_at' );
+			}
+			add_settings_error( 'dtmm_settings', 'tracking_reset', 'Duration tracking has been reset.', 'success' );
+		}
 		register_setting(
-			'block_theme_maintenance',
-			'btmm_retry_after',
+			'dtmm_settings',
+			'dtmm_enabled',
+			array(
+				'type'              => 'boolean',
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+		register_setting(
+			'dtmm_settings',
+			'dtmm_retry_after',
 			array(
 				'type'              => 'integer',
 				'default'           => 3600,
 				'sanitize_callback' => 'absint',
 			)
 		);
-		register_setting( 'block_theme_maintenance', 'btmm_allow_bots' );
 		register_setting(
-			'block_theme_maintenance',
-			'btmm_enabled_at',
+			'dtmm_settings',
+			'dtmm_allow_bots',
 			array(
-				'type' => 'integer',
+				'type'              => 'boolean',
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			)
+		);
+		register_setting(
+			'dtmm_settings',
+			'dtmm_enabled_at',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
 			)
 		);
 	}
@@ -90,22 +116,22 @@ class Block_Theme_Maintenance_Mode {
 	 * Renders the settings page HTML.
 	 */
 	public function settings_page() {
-		$enabled     = get_option( 'btmm_enabled', false );
-		$retry_after = get_option( 'btmm_retry_after', 3600 );
-		$allow_bots  = get_option( 'btmm_allow_bots', false );
+		$enabled     = get_option( 'dtmm_enabled', false );
+		$retry_after = get_option( 'dtmm_retry_after', 3600 );
+		$allow_bots  = get_option( 'dtmm_allow_bots', false );
 		$template    = $this->get_maintenance_template();
 
 		// Track when maintenance was enabled.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
-		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'btmm_enabled_at' ) ) {
-			update_option( 'btmm_enabled_at', time() );
+		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'dtmm_enabled_at' ) ) {
+			update_option( 'dtmm_enabled_at', time() );
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
 		} elseif ( isset( $_GET['settings-updated'] ) && ! $enabled ) {
-			delete_option( 'btmm_enabled_at' );
+			delete_option( 'dtmm_enabled_at' );
 		}
 		?>
 		<div class="wrap">
-			<h1>Maintenance Mode</h1>
+			<h1>Downtime: Block Theme Maintenance Mode</h1>
 
 			<?php if ( ! $template ) : ?>
 				<div class="notice notice-error">
@@ -122,13 +148,13 @@ class Block_Theme_Maintenance_Mode {
 			<?php endif; ?>
 
 			<form method="post" action="options.php">
-				<?php settings_fields( 'block_theme_maintenance' ); ?>
+				<?php settings_fields( 'dtmm_settings' ); ?>
 				<table class="form-table">
 					<tr>
 						<th scope="row">Enable Maintenance Mode</th>
 						<td>
 							<label>
-								<input type="checkbox" name="btmm_enabled" value="1" <?php checked( $enabled, 1 ); ?> <?php disabled( ! $template ); ?>>
+								<input type="checkbox" name="dtmm_enabled" value="1" <?php checked( $enabled, 1 ); ?> <?php disabled( ! $template ); ?>>
 								Activate maintenance mode for logged-out visitors
 							</label>
 						</td>
@@ -136,7 +162,7 @@ class Block_Theme_Maintenance_Mode {
 					<tr>
 						<th scope="row">Expected Duration</th>
 						<td>
-							<select name="btmm_retry_after">
+							<select name="dtmm_retry_after">
 								<option value="1800" <?php selected( $retry_after, 1800 ); ?>>30 minutes</option>
 								<option value="3600" <?php selected( $retry_after, 3600 ); ?>>1 hour</option>
 								<option value="7200" <?php selected( $retry_after, 7200 ); ?>>2 hours</option>
@@ -152,7 +178,7 @@ class Block_Theme_Maintenance_Mode {
 						<th scope="row">Search Engine Access</th>
 						<td>
 							<label>
-								<input type="checkbox" name="btmm_allow_bots" value="1" <?php checked( $allow_bots, 1 ); ?>>
+								<input type="checkbox" name="dtmm_allow_bots" value="1" <?php checked( $allow_bots, 1 ); ?>>
 								Allow search engine bots to bypass maintenance mode
 							</label>
 							<p class="description">Recommended for maintenance lasting more than a few hours. Lets search engines continue crawling your site normally while visitors see the maintenance page.</p>
@@ -160,17 +186,30 @@ class Block_Theme_Maintenance_Mode {
 					</tr>
 				</table>
 
-				<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
-					<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
-					<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
-						<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
-						<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
-						<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
-					</ul>
-				</div>
-
 				<?php submit_button(); ?>
 			</form>
+
+			<?php $enabled_at = get_option( 'dtmm_enabled_at', 0 ); ?>
+			<?php if ( $enabled_at ) : ?>
+				<hr style="margin: 30px 0;">
+				<h2>Duration Tracking</h2>
+				<p>Maintenance mode was enabled on: <strong><?php echo esc_html( wp_date( 'F j, Y \a\t g:i a', $enabled_at ) ); ?></strong></p>
+				<p class="description">If this date is incorrect (e.g., from a previous maintenance period), you can reset it.</p>
+				<form method="post" style="margin-top: 10px;">
+					<?php wp_nonce_field( 'dtmm_reset_tracking_action' ); ?>
+					<input type="hidden" name="dtmm_reset_tracking" value="1">
+					<?php submit_button( 'Reset Duration Tracking', 'secondary', 'submit', false ); ?>
+				</form>
+			<?php endif; ?>
+
+			<div class="card" style="max-width: 600px; margin-top: 20px; padding: 16px 20px;">
+				<h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600;">SEO Recommendations</h3>
+				<ul style="list-style: disc; margin: 0 0 0 20px; padding: 0; line-height: 1.8;">
+					<li><strong>Under 2 hours:</strong> Default settings are fine.</li>
+					<li><strong>2-24 hours:</strong> Consider enabling search engine access.</li>
+					<li><strong>Over 1 day:</strong> Always enable search engine access. Extended 503 responses can cause pages to be removed from search indexes.</li>
+				</ul>
+			</div>
 		</div>
 		<?php
 	}
@@ -227,7 +266,7 @@ class Block_Theme_Maintenance_Mode {
 	 * @return string The template path to use.
 	 */
 	public function maybe_show_maintenance( $template ) {
-		if ( ! get_option( 'btmm_enabled', false ) ) {
+		if ( ! get_option( 'dtmm_enabled', false ) ) {
 			return $template;
 		}
 
@@ -242,7 +281,7 @@ class Block_Theme_Maintenance_Mode {
 		}
 
 		// Allow search engine bots through if enabled.
-		if ( get_option( 'btmm_allow_bots', false ) && $this->is_search_engine_bot() ) {
+		if ( get_option( 'dtmm_allow_bots', false ) && $this->is_search_engine_bot() ) {
 			return $template;
 		}
 
@@ -254,14 +293,14 @@ class Block_Theme_Maintenance_Mode {
 
 		nocache_headers();
 		status_header( 503 );
-		header( 'Retry-After: ' . absint( get_option( 'btmm_retry_after', 3600 ) ) );
+		header( 'Retry-After: ' . absint( get_option( 'dtmm_retry_after', 3600 ) ) );
 
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		global $_wp_current_template_content;
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		$_wp_current_template_content = $maintenance_template->content;
 
-		return ABSPATH . WPINC . '/template-canvas.php';
+		return wp_normalize_path( ABSPATH . 'wp-includes/template-canvas.php' );
 	}
 
 	/**
@@ -270,15 +309,15 @@ class Block_Theme_Maintenance_Mode {
 	 * @param WP_Admin_Bar $wp_admin_bar The admin bar instance.
 	 */
 	public function admin_bar_notice( $wp_admin_bar ) {
-		if ( ! get_option( 'btmm_enabled', false ) ) {
+		if ( ! get_option( 'dtmm_enabled', false ) ) {
 			return;
 		}
 
 		$wp_admin_bar->add_node(
 			array(
-				'id'    => 'btmm-notice',
+				'id'    => 'dtmm-notice',
 				'title' => '🚧 Maintenance Mode Active',
-				'href'  => admin_url( 'options-general.php?page=block-theme-maintenance' ),
+				'href'  => admin_url( 'options-general.php?page=dtmm-maintenance' ),
 			)
 		);
 	}
@@ -287,11 +326,11 @@ class Block_Theme_Maintenance_Mode {
 	 * Displays an admin warning when maintenance mode has been active for too long.
 	 */
 	public function duration_warning() {
-		if ( ! get_option( 'btmm_enabled', false ) ) {
+		if ( ! get_option( 'dtmm_enabled', false ) ) {
 			return;
 		}
 
-		$enabled_at = get_option( 'btmm_enabled_at', 0 );
+		$enabled_at = get_option( 'dtmm_enabled_at', 0 );
 
 		if ( ! $enabled_at ) {
 			return;
@@ -300,14 +339,14 @@ class Block_Theme_Maintenance_Mode {
 		$days_active = floor( ( time() - $enabled_at ) / DAY_IN_SECONDS );
 
 		if ( $days_active >= 3 ) {
-			$allow_bots = get_option( 'btmm_allow_bots', false );
+			$allow_bots = get_option( 'dtmm_allow_bots', false );
 			?>
 			<div class="notice notice-warning">
 				<p>
 					<strong>Maintenance Mode Warning:</strong>
 					Your site has been in maintenance mode for <?php echo absint( $days_active ); ?> days.
 					<?php if ( ! $allow_bots ) : ?>
-						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=block-theme-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
+						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=dtmm-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
 					<?php else : ?>
 						Extended maintenance periods can still affect your search rankings.
 					<?php endif; ?>
@@ -318,4 +357,13 @@ class Block_Theme_Maintenance_Mode {
 	}
 }
 
-new Block_Theme_Maintenance_Mode();
+new DTMM_Maintenance_Mode();
+
+/**
+ * Clears duration tracking on plugin deactivation.
+ */
+function dtmm_deactivate() {
+	delete_option( 'dtmm_enabled' );
+	delete_option( 'dtmm_enabled_at' );
+}
+register_deactivation_hook( __FILE__, 'dtmm_deactivate' );
