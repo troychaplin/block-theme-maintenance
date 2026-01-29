@@ -1,4 +1,4 @@
-=== Downtime ===
+=== Planned Outage for Block Themes ===
 
 Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
@@ -13,7 +13,7 @@ Simple maintenance mode for block themes. Shows a maintenance template to logged
 
 == Description ==
 
-Downtime: Block Theme Maintenance Mode is a lightweight plugin that enables maintenance mode for WordPress block themes. When enabled, logged-out visitors see your custom maintenance template while logged-in users can browse the site normally.
+Planned Outage for Block Themes is a lightweight plugin that enables maintenance mode for WordPress block themes. When enabled, logged-out visitors see your custom maintenance template while logged-in users can browse the site normally.
 
 **Features:**
 

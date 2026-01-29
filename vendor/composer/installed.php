@@ -1,6 +1,6 @@
 <?php return array(
     'root' => array(
-        'name' => 'troychaplin/downtime',
+        'name' => 'troychaplin/planned-outage',
         'pretty_version' => '1.0.0',
         'version' => '1.0.0.0',
         'reference' => null,
@@ -46,7 +46,7 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
-        'troychaplin/downtime' => array(
+        'troychaplin/planned-outage' => array(
             'pretty_version' => '1.0.0',
             'version' => '1.0.0.0',
             'reference' => null,
