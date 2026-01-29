@@ -1,5 +1,5 @@
 {
-	"name": "downtime",
+	"name": "planned-outage",
 	"version": "1.0.0",
 	"description": "Simple maintenance mode for block themes. Create a templates/maintenance.html in your theme.",
 	"author": "Troy Chaplin",
@@ -10,7 +10,7 @@
 		"prepare": "husky"
 	},
 	"devDependencies": {
-		"@wordpress/env": "^10.35.0",
+		"@wordpress/env": "^10.38.0",
 		"husky": "^9.1.7"
 	}
 }

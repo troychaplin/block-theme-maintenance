@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name:       Downtime
- * Description:       Simple maintenance mode for block themes. Create a templates/maintenance.html and style to match your brand.
+ * Plugin Name:       Planned Outage for Block Themes
+ * Description:       Simple maintenance mode for block themes. Activate, create a templates/maintenance.html and style to match your brand.
  * Requires at least: 6.3
  * Requires PHP:      7.0
  * Version:           1.0.0
  * Author:            Troy Chaplin
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       downtime
+ * Text Domain:       planned-outage
  *
- * @package Downtime
+ * @package Planned_Outage
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Main plugin class for Downtime: Block Theme Maintenance Mode.
+ * Main plugin class for Planned Outage for Block Themes.
  */
-class DTMM_Maintenance_Mode {
+class Planned_Outage {
 
 	/**
 	 * List of search engine bot user agent strings to detect.
@@ -47,6 +47,7 @@ class DTMM_Maintenance_Mode {
 		add_filter( 'template_include', array( $this, 'maybe_show_maintenance' ), 99 );
 		add_action( 'admin_bar_menu', array( $this, 'admin_bar_notice' ), 100 );
 		add_action( 'admin_notices', array( $this, 'duration_warning' ) );
+		register_deactivation_hook( __FILE__, array( $this, 'pobt_deactivate' ) );
 	}
 
 	/**
@@ -54,10 +55,10 @@ class DTMM_Maintenance_Mode {
 	 */
 	public function add_admin_menu() {
 		add_options_page(
-			'Downtime',
-			'Downtime',
+			'Planned Outage',
+			'Planned Outage',
 			'manage_options',
-			'dtmm-maintenance',
+			'pobt-maintenance',
 			array( $this, 'settings_page' )
 		);
 	}
@@ -67,17 +68,17 @@ class DTMM_Maintenance_Mode {
 	 */
 	public function register_settings() {
 		// Handle reset tracking action.
-		if ( isset( $_POST['dtmm_reset_tracking'] ) && check_admin_referer( 'dtmm_reset_tracking_action' ) ) {
-			if ( get_option( 'dtmm_enabled', false ) ) {
-				update_option( 'dtmm_enabled_at', time() );
+		if ( isset( $_POST['pobt_reset_tracking'] ) && check_admin_referer( 'pobt_reset_tracking_action' ) ) {
+			if ( get_option( 'pobt_enabled', false ) ) {
+				update_option( 'pobt_enabled_at', time() );
 			} else {
-				delete_option( 'dtmm_enabled_at' );
+				delete_option( 'pobt_enabled_at' );
 			}
-			add_settings_error( 'dtmm_settings', 'tracking_reset', 'Duration tracking has been reset.', 'success' );
+			add_settings_error( 'pobt_settings', 'tracking_reset', 'Duration tracking has been reset.', 'success' );
 		}
 		register_setting(
-			'dtmm_settings',
-			'dtmm_enabled',
+			'pobt_settings',
+			'pobt_enabled',
 			array(
 				'type'              => 'boolean',
 				'default'           => false,
@@ -85,8 +86,8 @@ class DTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'dtmm_settings',
-			'dtmm_retry_after',
+			'pobt_settings',
+			'pobt_retry_after',
 			array(
 				'type'              => 'integer',
 				'default'           => 3600,
@@ -94,8 +95,8 @@ class DTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'dtmm_settings',
-			'dtmm_allow_bots',
+			'pobt_settings',
+			'pobt_allow_bots',
 			array(
 				'type'              => 'boolean',
 				'default'           => false,
@@ -103,8 +104,8 @@ class DTMM_Maintenance_Mode {
 			)
 		);
 		register_setting(
-			'dtmm_settings',
-			'dtmm_enabled_at',
+			'pobt_settings',
+			'pobt_enabled_at',
 			array(
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
@@ -116,22 +117,22 @@ class DTMM_Maintenance_Mode {
 	 * Renders the settings page HTML.
 	 */
 	public function settings_page() {
-		$enabled     = get_option( 'dtmm_enabled', false );
-		$retry_after = get_option( 'dtmm_retry_after', 3600 );
-		$allow_bots  = get_option( 'dtmm_allow_bots', false );
+		$enabled     = get_option( 'pobt_enabled', false );
+		$retry_after = get_option( 'pobt_retry_after', 3600 );
+		$allow_bots  = get_option( 'pobt_allow_bots', false );
 		$template    = $this->get_maintenance_template();
 
 		// Track when maintenance was enabled.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
-		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'dtmm_enabled_at' ) ) {
-			update_option( 'dtmm_enabled_at', time() );
+		if ( isset( $_GET['settings-updated'] ) && $enabled && ! get_option( 'pobt_enabled_at' ) ) {
+			update_option( 'pobt_enabled_at', time() );
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking if settings were updated, not processing form data.
 		} elseif ( isset( $_GET['settings-updated'] ) && ! $enabled ) {
-			delete_option( 'dtmm_enabled_at' );
+			delete_option( 'pobt_enabled_at' );
 		}
 		?>
 		<div class="wrap">
-			<h1>Downtime: Block Theme Maintenance Mode</h1>
+			<h1>Planned Outage for Block Themes</h1>
 
 			<?php if ( ! $template ) : ?>
 				<div class="notice notice-error">
@@ -148,13 +149,13 @@ class DTMM_Maintenance_Mode {
 			<?php endif; ?>
 
 			<form method="post" action="options.php">
-				<?php settings_fields( 'dtmm_settings' ); ?>
+				<?php settings_fields( 'pobt_settings' ); ?>
 				<table class="form-table">
 					<tr>
 						<th scope="row">Enable Maintenance Mode</th>
 						<td>
 							<label>
-								<input type="checkbox" name="dtmm_enabled" value="1" <?php checked( $enabled, 1 ); ?> <?php disabled( ! $template ); ?>>
+								<input type="checkbox" name="pobt_enabled" value="1" <?php checked( $enabled, 1 ); ?> <?php disabled( ! $template ); ?>>
 								Activate maintenance mode for logged-out visitors
 							</label>
 						</td>
@@ -162,7 +163,7 @@ class DTMM_Maintenance_Mode {
 					<tr>
 						<th scope="row">Expected Duration</th>
 						<td>
-							<select name="dtmm_retry_after">
+							<select name="pobt_retry_after">
 								<option value="1800" <?php selected( $retry_after, 1800 ); ?>>30 minutes</option>
 								<option value="3600" <?php selected( $retry_after, 3600 ); ?>>1 hour</option>
 								<option value="7200" <?php selected( $retry_after, 7200 ); ?>>2 hours</option>
@@ -178,7 +179,7 @@ class DTMM_Maintenance_Mode {
 						<th scope="row">Search Engine Access</th>
 						<td>
 							<label>
-								<input type="checkbox" name="dtmm_allow_bots" value="1" <?php checked( $allow_bots, 1 ); ?>>
+								<input type="checkbox" name="pobt_allow_bots" value="1" <?php checked( $allow_bots, 1 ); ?>>
 								Allow search engine bots to bypass maintenance mode
 							</label>
 							<p class="description">Recommended for maintenance lasting more than a few hours. Lets search engines continue crawling your site normally while visitors see the maintenance page.</p>
@@ -189,15 +190,15 @@ class DTMM_Maintenance_Mode {
 				<?php submit_button(); ?>
 			</form>
 
-			<?php $enabled_at = get_option( 'dtmm_enabled_at', 0 ); ?>
+			<?php $enabled_at = get_option( 'pobt_enabled_at', 0 ); ?>
 			<?php if ( $enabled_at ) : ?>
 				<hr style="margin: 30px 0;">
 				<h2>Duration Tracking</h2>
 				<p>Maintenance mode was enabled on: <strong><?php echo esc_html( wp_date( 'F j, Y \a\t g:i a', $enabled_at ) ); ?></strong></p>
 				<p class="description">If this date is incorrect (e.g., from a previous maintenance period), you can reset it.</p>
 				<form method="post" style="margin-top: 10px;">
-					<?php wp_nonce_field( 'dtmm_reset_tracking_action' ); ?>
-					<input type="hidden" name="dtmm_reset_tracking" value="1">
+					<?php wp_nonce_field( 'pobt_reset_tracking_action' ); ?>
+					<input type="hidden" name="pobt_reset_tracking" value="1">
 					<?php submit_button( 'Reset Duration Tracking', 'secondary', 'submit', false ); ?>
 				</form>
 			<?php endif; ?>
@@ -266,7 +267,7 @@ class DTMM_Maintenance_Mode {
 	 * @return string The template path to use.
 	 */
 	public function maybe_show_maintenance( $template ) {
-		if ( ! get_option( 'dtmm_enabled', false ) ) {
+		if ( ! get_option( 'pobt_enabled', false ) ) {
 			return $template;
 		}
 
@@ -281,7 +282,7 @@ class DTMM_Maintenance_Mode {
 		}
 
 		// Allow search engine bots through if enabled.
-		if ( get_option( 'dtmm_allow_bots', false ) && $this->is_search_engine_bot() ) {
+		if ( get_option( 'pobt_allow_bots', false ) && $this->is_search_engine_bot() ) {
 			return $template;
 		}
 
@@ -293,7 +294,7 @@ class DTMM_Maintenance_Mode {
 
 		nocache_headers();
 		status_header( 503 );
-		header( 'Retry-After: ' . absint( get_option( 'dtmm_retry_after', 3600 ) ) );
+		header( 'Retry-After: ' . absint( get_option( 'pobt_retry_after', 3600 ) ) );
 
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		global $_wp_current_template_content;
@@ -309,15 +310,15 @@ class DTMM_Maintenance_Mode {
 	 * @param WP_Admin_Bar $wp_admin_bar The admin bar instance.
 	 */
 	public function admin_bar_notice( $wp_admin_bar ) {
-		if ( ! get_option( 'dtmm_enabled', false ) ) {
+		if ( ! get_option( 'pobt_enabled', false ) ) {
 			return;
 		}
 
 		$wp_admin_bar->add_node(
 			array(
-				'id'    => 'dtmm-notice',
+				'id'    => 'pobt-notice',
 				'title' => '🚧 Maintenance Mode Active',
-				'href'  => admin_url( 'options-general.php?page=dtmm-maintenance' ),
+				'href'  => admin_url( 'options-general.php?page=pobt-maintenance' ),
 			)
 		);
 	}
@@ -326,11 +327,11 @@ class DTMM_Maintenance_Mode {
 	 * Displays an admin warning when maintenance mode has been active for too long.
 	 */
 	public function duration_warning() {
-		if ( ! get_option( 'dtmm_enabled', false ) ) {
+		if ( ! get_option( 'pobt_enabled', false ) ) {
 			return;
 		}
 
-		$enabled_at = get_option( 'dtmm_enabled_at', 0 );
+		$enabled_at = get_option( 'pobt_enabled_at', 0 );
 
 		if ( ! $enabled_at ) {
 			return;
@@ -339,14 +340,14 @@ class DTMM_Maintenance_Mode {
 		$days_active = floor( ( time() - $enabled_at ) / DAY_IN_SECONDS );
 
 		if ( $days_active >= 3 ) {
-			$allow_bots = get_option( 'dtmm_allow_bots', false );
+			$allow_bots = get_option( 'pobt_allow_bots', false );
 			?>
 			<div class="notice notice-warning">
 				<p>
 					<strong>Maintenance Mode Warning:</strong>
 					Your site has been in maintenance mode for <?php echo absint( $days_active ); ?> days.
 					<?php if ( ! $allow_bots ) : ?>
-						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=dtmm-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
+						Consider <a href="<?php echo esc_url( admin_url( 'options-general.php?page=pobt-maintenance' ) ); ?>">enabling search engine access</a> to protect your SEO.
 					<?php else : ?>
 						Extended maintenance periods can still affect your search rankings.
 					<?php endif; ?>
@@ -355,15 +356,14 @@ class DTMM_Maintenance_Mode {
 			<?php
 		}
 	}
+
+	/**
+	 * Clears duration tracking on plugin deactivation.
+	 */
+	public function pobt_deactivate() {
+		delete_option( 'pobt_enabled' );
+		delete_option( 'pobt_enabled_at' );
+	}
 }
 
-new DTMM_Maintenance_Mode();
-
-/**
- * Clears duration tracking on plugin deactivation.
- */
-function dtmm_deactivate() {
-	delete_option( 'dtmm_enabled' );
-	delete_option( 'dtmm_enabled_at' );
-}
-register_deactivation_hook( __FILE__, 'dtmm_deactivate' );
+new Planned_Outage();
