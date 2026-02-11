@@ -365,34 +365,59 @@ class Planned_Outage {
 	 * @return string The template path to use.
 	 */
 	public function maybe_show_maintenance( $template ) {
+		// TEMP DEBUG — remove after troubleshooting.
+		$debug = defined( 'WP_DEBUG' ) && WP_DEBUG;
+
 		if ( ! get_option( 'pobt_enabled', false ) ) {
+			if ( $debug ) {
+				error_log( 'POBT: Exiting — not enabled' );
+			}
 			return $template;
 		}
 
 		$maintenance_template = $this->get_maintenance_template();
 
 		if ( ! $maintenance_template ) {
+			if ( $debug ) {
+				error_log( 'POBT: Exiting — no maintenance template found' );
+			}
 			return $template;
 		}
 
 		if ( is_user_logged_in() || is_login() ) {
+			if ( $debug ) {
+				error_log( 'POBT: Exiting — user logged in or login page' );
+			}
 			return $template;
 		}
 
 		// Allow bypass via secret link if enabled.
 		if ( get_option( 'pobt_bypass_enabled', false ) && $this->has_bypass_access() ) {
+			if ( $debug ) {
+				error_log( 'POBT: Exiting — bypass access granted' );
+			}
 			return $template;
 		}
 
 		// Allow search engine bots through if enabled.
 		if ( get_option( 'pobt_allow_bots', false ) && $this->is_search_engine_bot() ) {
+			if ( $debug ) {
+				error_log( 'POBT: Exiting — search engine bot' );
+			}
 			return $template;
 		}
 
 		// Redirect to homepage if not already there.
 		if ( ! $this->is_homepage() ) {
+			if ( $debug ) {
+				error_log( 'POBT: Redirecting to homepage' );
+			}
 			wp_safe_redirect( home_url( '/' ) );
 			exit;
+		}
+
+		if ( $debug ) {
+			error_log( 'POBT: Showing maintenance template' );
 		}
 
 		$retry_after = absint( get_option( 'pobt_retry_after', 3600 ) );
