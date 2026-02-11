@@ -28,27 +28,27 @@ class Planned_Outage {
 	 * @var array
 	 */
 	private $cache_plugins = array(
-		'surge'           => array(
-			'constant' => 'SURGE_CACHE_DIR',
-			'label'    => 'Surge',
+		'surge'            => array(
+			'option' => 'surge_installed',
+			'label'  => 'Surge',
 		),
-		'wp-super-cache'  => array(
+		'wp-super-cache'   => array(
 			'function' => 'wp_cache_clear_cache',
 			'label'    => 'WP Super Cache',
 		),
-		'w3-total-cache'  => array(
+		'w3-total-cache'   => array(
 			'function' => 'w3tc_flush_all',
 			'label'    => 'W3 Total Cache',
 		),
-		'wp-fastest-cache' => array(
+		'wp-fastest-cache'  => array(
 			'class_method' => array( 'WpFastestCache', 'deleteCache' ),
 			'label'        => 'WP Fastest Cache',
 		),
-		'litespeed-cache' => array(
+		'litespeed-cache'  => array(
 			'class_method' => array( 'LiteSpeed_Cache_API', 'purge_all' ),
 			'label'        => 'LiteSpeed Cache',
 		),
-		'wp-rocket'       => array(
+		'wp-rocket'        => array(
 			'function' => 'rocket_clean_domain',
 			'label'    => 'WP Rocket',
 		),
@@ -530,12 +530,39 @@ class Planned_Outage {
 		$detected = array();
 
 		foreach ( $this->cache_plugins as $plugin ) {
-			if ( isset( $plugin['constant'] ) && defined( $plugin['constant'] ) ) {
+			if ( isset( $plugin['option'] ) && get_option( $plugin['option'] ) ) {
 				$detected[] = $plugin['label'];
 			} elseif ( isset( $plugin['function'] ) && function_exists( $plugin['function'] ) ) {
 				$detected[] = $plugin['label'];
 			} elseif ( isset( $plugin['class_method'] ) && is_callable( $plugin['class_method'] ) ) {
 				$detected[] = $plugin['label'];
+			}
+		}
+
+		// Fallback detection when no specific plugin was identified.
+		if ( empty( $detected ) ) {
+			// Check for the advanced-cache.php dropin registered with WordPress.
+			$dropins = get_dropins();
+			if ( isset( $dropins['advanced-cache.php'] ) ) {
+				$detected[] = 'Full-page cache dropin (advanced-cache.php)';
+			}
+
+			// Check for cache files in common cache directory.
+			if ( empty( $detected ) ) {
+				$cache_dir = WP_CONTENT_DIR . '/cache';
+				if ( is_dir( $cache_dir ) ) {
+					$contents = scandir( $cache_dir );
+					// Filter out dot entries and index files.
+					$cache_contents = array_filter(
+						$contents,
+						function ( $item ) {
+							return ! in_array( $item, array( '.', '..', 'index.php', 'index.html', '.htaccess' ), true );
+						}
+					);
+					if ( ! empty( $cache_contents ) ) {
+						$detected[] = 'Page cache (wp-content/cache/ is not empty)';
+					}
+				}
 			}
 		}
 
@@ -558,8 +585,9 @@ class Planned_Outage {
 		}
 
 		// Surge: delete cache directory contents if available.
-		if ( defined( 'SURGE_CACHE_DIR' ) && is_dir( SURGE_CACHE_DIR ) ) {
-			$this->delete_directory_contents( SURGE_CACHE_DIR );
+		$surge_cache_dir = WP_CONTENT_DIR . '/cache/surge';
+		if ( get_option( 'surge_installed' ) && is_dir( $surge_cache_dir ) ) {
+			$this->delete_directory_contents( $surge_cache_dir );
 		}
 	}
 
