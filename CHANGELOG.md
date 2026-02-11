@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic cache flushing when plugin settings are saved
 - Support for detecting Surge, WP Super Cache, W3 Total Cache, WP Fastest Cache, LiteSpeed Cache, and WP Rocket
 - Fallback cache detection via advanced-cache.php dropin and wp-content/cache/ directory
+- No-cache headers on all bypass responses (logged-in users, bypass link, search engine bots) to prevent reverse proxies from caching the normal page and serving it to all visitors
+
+### Fixed
+
+- Bypass link, logged-in user, and bot responses no longer poison server-level caches (Nginx, Varnish) by sending no-cache headers on all responses served while maintenance mode is active
 
 ## [1.1.0]
 

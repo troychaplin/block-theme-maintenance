@@ -87,6 +87,8 @@ Simply deactivate and delete the plugin. The plugin stores options prefixed with
 * Added automatic cache flushing when plugin settings are saved
 * Added support for detecting Surge, WP Super Cache, W3 Total Cache, WP Fastest Cache, LiteSpeed Cache, and WP Rocket
 * Added fallback cache detection via advanced-cache.php dropin and wp-content/cache/ directory
+* Added no-cache headers on all bypass responses to prevent reverse proxy cache poisoning
+* Fixed bypass link, logged-in user, and bot responses poisoning server-level caches
 
 = 1.1.0 =
 * Added bypass link feature for sharing preview access with non-logged-in users
