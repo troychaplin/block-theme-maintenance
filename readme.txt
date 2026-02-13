@@ -4,7 +4,7 @@ Contributors: areziaal
 Tags: maintenance, maintenance mode, block theme, coming soon
 Requires at least: 6.3
 Tested up to: 6.9
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -89,6 +89,7 @@ Simply deactivate and delete the plugin. The plugin stores options prefixed with
 * Added fallback cache detection via advanced-cache.php dropin and wp-content/cache/ directory
 * Added no-cache headers on all bypass responses to prevent reverse proxy cache poisoning
 * Fixed bypass link, logged-in user, and bot responses poisoning server-level caches
+* Fixed maintenance template not rendering when a static front page is set in Settings > Reading
 
 = 1.1.0 =
 * Added bypass link feature for sharing preview access with non-logged-in users

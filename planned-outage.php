@@ -4,7 +4,7 @@
  * Description:       Simple maintenance mode for block themes. Activate, create a templates/maintenance.html and style to match your brand.
  * Requires at least: 6.3
  * Requires PHP:      7.0
- * Version:           1.2.0
+ * Version:           1.2.1
  * Author:            Troy Chaplin
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -458,10 +458,21 @@ class Planned_Outage {
 			header( 'Retry-After: ' . $retry_after );
 		}
 
+		// Override the block template globals so WordPress renders the maintenance
+		// template content instead of the resolved homepage template.
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
-		global $_wp_current_template_content;
+		global $_wp_current_template_content, $_wp_current_template_id, $wp_query;
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
 		$_wp_current_template_content = $maintenance_template->content;
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WordPress core global.
+		$_wp_current_template_id = $maintenance_template->id;
+
+		// Reset query flags so get_the_block_template_html() does not enter the
+		// singular post loop which would set up the homepage post data.
+		$wp_query->is_singular  = false;
+		$wp_query->is_page      = false;
+		$wp_query->is_home      = false;
+		$wp_query->is_front_page = false;
 
 		return wp_normalize_path( ABSPATH . 'wp-includes/template-canvas.php' );
 	}

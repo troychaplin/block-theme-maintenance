@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed for any bug fixes.
 - Security in case of vulnerabilities.
 
+## [Unreleased]
+
+## [1.2.1]
+
+### Fixed
+
+- Maintenance template now renders correctly when a static front page is set in Settings > Reading, by properly overriding the block template ID and resetting query flags to prevent the homepage post loop from interfering
+
 ## [1.2.0]
 
 ### Added
@@ -27,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Bypass link, logged-in user, and bot responses no longer poison server-level caches (Nginx, Varnish) by sending no-cache headers on all responses served while maintenance mode is active
+- Maintenance template now renders correctly when a static front page is set in Settings > Reading, by properly overriding the block template ID and resetting query flags to prevent the homepage post loop from interfering
 
 ## [1.1.0]
 
